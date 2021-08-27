@@ -9,20 +9,68 @@ app.use(cors());
 
 const users = [];
 
+function getUser(username) {
+  return users.find((user) => user.username === username);
+}
+
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const user = getUser(username);
+
+  if (!user) {
+    return response.status(404).json();
+  }
+
+  request.user = user;
+  next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  if (user.pro || user.todos.length < 10) {
+    return next();
+  }
+  return response.status(403).json();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = getUser(username);
+  const validId = validate(id);
+
+  if (!validId) {
+    return response.status(400).json();
+  }
+
+  if (!user) {
+    return response.status(404).json();
+  }
+
+  const todo = user.todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: 'Todo not found!' });
+  }
+
+  request.todo = todo;
+  request.user = user;
+  next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find((user) => user.id === id);
+
+  if (!user) {
+    return response.status(404).json();
+  }
+
+  request.user = user;
+  next();
 }
 
 app.post('/users', (request, response) => {
